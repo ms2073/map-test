@@ -1,46 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import './Map.css'; // Import the CSS style file
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { useState } from 'react';
+
+function LocationMarker() {
+  const [position, setPosition] = useState(null);
+  const map = useMapEvents({
+    click() {
+      map.locate();
+    },
+    locationfound(e) {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position}>
+      <Popup>You are here</Popup>
+    </Marker>
+  );
+}
 
 function Map() {
-  const [location, setLocation] = useState(null);
-
-  function getCurrentLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setLocation({ lat, lng });
-      });
-    } else {
-      alert("Geolocation is not supported by this browser.");
-    }
-  }
-
-  function renderMap() {
-    if (location) {
-      const { lat, lng } = location;
-      return (
-        <MapContainer center={[lat, lng]} zoom={15} className="map-container">
-          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={[lat, lng]}>
-            <Popup>Your location</Popup>
-          </Marker>
-        </MapContainer>
-      );
-    } else {
-      return <p>Please click the button to get your current location.</p>;
-    }
-  }
-
-  useEffect(() => {
-    getCurrentLocation();
-  }, []);
-
   return (
-    <div className="container">
-      <button onClick={getCurrentLocation}>Get current location</button>
-      {renderMap()}
+    <div className="App">
+      <MapContainer
+        center={[51.505, -0.09]}
+        zoom={13}
+        style={{ height: "100vh", width: "100%" }}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="Map data © <a href=&quot;https://www.openstreetmap.org/&quot;>OpenStreetMap</a> contributors"
+        />
+        <LocationMarker />
+      </MapContainer>
     </div>
   );
 }
